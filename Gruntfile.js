@@ -1,224 +1,191 @@
 module.exports = function (grunt) {
-    var embedOption = grunt.option('embedLocales'),
-        embedLocaleDest = embedOption ?
-            'min/moment-with-customlocales.js' :
-            'min/moment-with-locales.js',
-        embedLocaleSrc = 'locale/*.js';
-
-    if (embedOption && embedOption.match(/,/)) {
-        embedLocaleSrc = 'locale/{' + embedOption + '}.js';
-    }
-    else if (embedOption) {
-        embedLocaleSrc = 'locale/' + embedOption + '.js';
-    }
-
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        concat : {
-            locales: {
-                src: 'locale/*.js',
-                dest: 'min/locales.js'
-            },
-            tests: {
-                src: [
-                    'test/browser-prefix.js',
-                    'test/moment/*.js',
-                    'test/locale/*.js',
-                    'test/browser-suffix.js'
-                ],
-                dest: 'min/tests.js'
-            }
+        env: {
+            sauceLabs: grunt.file.exists('.sauce-labs.creds')
+                ? grunt.file.readJSON('.sauce-labs.creds')
+                : {},
         },
-        env : {
-            sauceLabs : (grunt.file.exists('.sauce-labs.creds') ?
-                    grunt.file.readJSON('.sauce-labs.creds') : {})
-        },
-        karma : {
+        karma: {
             options: {
-                frameworks: ['nodeunit'],
-                files: [
-                    'min/moment-with-locales.js',
-                    'min/tests.js',
-                    'test/browser.js'
-                ],
+                browserNoActivityTimeout: 60000,
+                browserDisconnectTimeout: 10000,
+                browserDisconnectTolerance: 2,
+                frameworks: ['qunit'],
+                files: ['min/moment-with-locales.js', 'min/tests.js'],
                 sauceLabs: {
                     startConnect: true,
-                    testName: 'MomentJS'
+                    testName: 'MomentJS',
                 },
                 customLaunchers: {
                     slChromeWinXp: {
                         base: 'SauceLabs',
                         browserName: 'chrome',
-                        platform: 'Windows XP'
+                        platform: 'Windows XP',
+                    },
+                    slIe10Win7: {
+                        base: 'SauceLabs',
+                        browserName: 'internet explorer',
+                        platform: 'Windows 7',
+                        version: '10',
                     },
                     slIe9Win7: {
                         base: 'SauceLabs',
                         browserName: 'internet explorer',
                         platform: 'Windows 7',
-                        version: '9'
+                        version: '9',
                     },
                     slIe8Win7: {
                         base: 'SauceLabs',
                         browserName: 'internet explorer',
                         platform: 'Windows 7',
-                        version: '8'
+                        version: '8',
+                    },
+                    slIe11Win10: {
+                        base: 'SauceLabs',
+                        browserName: 'internet explorer',
+                        platform: 'Windows 10',
+                        version: '11',
+                    },
+                    slME25Win10: {
+                        base: 'SauceLabs',
+                        browserName: 'MicrosoftEdge',
+                        platform: 'Windows 10',
+                        version: '20.10240',
                     },
                     slFfLinux: {
                         base: 'SauceLabs',
                         browserName: 'firefox',
-                        platform: 'Linux'
+                        platform: 'Linux',
                     },
                     slSafariOsx: {
                         base: 'SauceLabs',
                         browserName: 'safari',
-                        platform: 'OS X 10.8'
-                    }
-                }
+                        platform: 'OS X 10.8',
+                    },
+                    slSafariOsx11: {
+                        base: 'SauceLabs',
+                        browserName: 'safari',
+                        platform: 'OS X 10.11',
+                    },
+                },
             },
             server: {
-                browsers: []
+                browsers: [],
             },
             chrome: {
                 singleRun: true,
-                browsers: ['Chrome']
+                browsers: ['Chrome'],
             },
             firefox: {
                 singleRun: true,
-                browsers: ['Firefox']
+                browsers: ['Firefox'],
             },
             sauce: {
-                options: {reporters: ['dots']},
+                options: {
+                    reporters: ['dots'],
+                },
                 singleRun: true,
                 browsers: [
                     'slChromeWinXp',
+                    'slIe10Win7',
                     'slIe9Win7',
                     'slIe8Win7',
+                    'slIe11Win10',
+                    'slME25Win10',
                     'slFfLinux',
-                    'slSafariOsx'
-                ]
-            }
+                    'slSafariOsx',
+                ],
+            },
         },
-
-        uglify : {
+        uglify: {
             main: {
                 files: {
-                    'min/moment-with-locales.min.js'     : 'min/moment-with-locales.js',
-                    'min/locales.min.js'                 : 'min/locales.js',
-                    'min/moment.min.js'                  : 'moment.js'
-                }
-            },
-            customlocales: {
-                files: {
-                    'min/moment-with-customlocales.min.js' : 'min/moment-with-customlocales.js'
-                }
+                    'min/moment-with-locales.min.js':
+                        'min/moment-with-locales.js',
+                    'min/locales.min.js': 'min/locales.js',
+                    'min/moment.min.js': 'moment.js',
+                },
             },
             options: {
+                sourceMap: true,
                 mangle: true,
                 compress: {
-                    dead_code: false // jshint ignore:line
+                    dead_code: false,
                 },
                 output: {
-                    ascii_only: true // jshint ignore:line
+                    ascii_only: true,
                 },
                 report: 'min',
-                preserveComments: 'some'
-            }
-        },
-        nodeunit : {
-            all : ['test/moment/**/*.js', 'test/locale/**/*.js']
-        },
-        jshint: {
-            all: [
-                'Gruntfile.js', 'moment.js', 'locale/**/*.js', 'test/**/*.js',
-                '!test/browser*.js'
-            ],
-            options: {
-                'node'     : true,
-                'browser'  : true,
-                'boss'     : false,
-                'curly'    : true,
-                'debug'    : false,
-                'devel'    : false,
-                'eqeqeq'   : true,
-                'eqnull'   : true,
-                'evil'     : false,
-                'forin'    : false,
-                'immed'    : false,
-                'laxbreak' : false,
-                'newcap'   : true,
-                'noarg'    : true,
-                'noempty'  : false,
-                'nonew'    : false,
-                'onevar'   : true,
-                'plusplus' : false,
-                'regexp'   : false,
-                'undef'    : true,
-                'sub'      : true,
-                'strict'   : false,
-                'white'    : true,
-                'es3'      : true,
-                'camelcase' : true,
-                'globals': {
-                    'define': false
-                }
-            }
-        },
-        jscs: {
-            all: [
-                'Gruntfile.js', 'moment.js', 'locale/**/*.js',
-                'test/**/*.js', '!test/browser*.js'
-            ],
-            options: {
-                config: '.jscs.json'
-            }
-        },
-        watch : {
-            test : {
-                files : [
-                    'moment.js',
-                    'locale/*.js',
-                    'test/**/*.js'
-                ],
-                tasks: ['nodeunit']
+                preserveComments: /^!|@preserve|@license|@cc_on/i,
             },
-            jshint : {
-                files : '<%= jshint.all %>',
-                tasks: ['jshint']
-            }
         },
-        embedLocales: {
-            moment: 'moment.js',
-            dest: embedLocaleDest,
-            targetLocales: embedLocaleSrc
+        watch: {
+            test: {
+                files: ['src/**/*.js'],
+                tasks: ['test'],
+            },
         },
         benchmark: {
-            all: {
-                src: ['benchmarks/*.js']
-            }
+            compare: { src: ['benchmarks/compare.js'] },
+            startOf: { src: ['benchmarks/startOf.js'] },
+            endOf: { src: ['benchmarks/endOf.js'] },
+            get: { src: ['benchmarks/get.js'] },
+            set: { src: ['benchmarks/set.js'] },
+            all: { src: ['benchmarks/*.js'] },
         },
         exec: {
             'meteor-init': {
-                command: [
-                    // Make sure Meteor is installed, per https://meteor.com/install.
-                    // The curl'ed script is safe; takes 2 minutes to read source & check.
+                // Make sure Meteor is installed, per https://meteor.com/install.
+                // The curl'ed script is safe; takes 2 minutes to read source & check.
+                command:
                     'type meteor >/dev/null 2>&1 || { curl https://install.meteor.com/ | sh; }',
-                    // Meteor expects package.js to be in the root directory of
-                    // the checkout, but we already have a package.js for Dojo
-                    'mv package.js package.dojo && cp meteor/package.js .'
-                ].join(';')
-            },
-            'meteor-cleanup': {
-                // remove build files and restore Dojo's package.js
-                command: 'rm -rf ".build.*" versions.json; mv package.dojo package.js'
-            },
-            'meteor-test': {
-                command: 'spacejam --mongo-url mongodb:// test-packages ./'
             },
             'meteor-publish': {
-                command: 'meteor publish'
-            }
-        }
-
+                command: 'cd meteor && meteor publish',
+            },
+            'typescript-test': {
+                command: 'npm run typescript-test',
+            },
+            'ts3.1-typescript-test': {
+                command: 'npm run ts3.1-typescript-test',
+            },
+            coveralls: {
+                command: 'npm run coveralls',
+            },
+            eslint: {
+                command: 'npm run eslint',
+            },
+            checkMonthsParseIssue: {
+                // Each locale should have all (3) or none (0) of monthsParse: configs.
+                command:
+                    'if [ $(ls src/locale/* | while read -r line; do grep -i "monthsParse:" $line | wc -l; done | sort | uniq | wc -l) -ne 2 ]; then echo "Months parse issue: see https://github.com/moment/moment/issues/2754"; exit 1; fi',
+            },
+            'prettier-fmt': {
+                command: function () {
+                    var nodeMajor = parseInt(
+                        process.version.slice(1).split('.')[0],
+                        10
+                    );
+                    if (nodeMajor < 10) {
+                        return "echo 'NOT running prettier on node < v10'";
+                    }
+                    return 'npm run prettier-fmt';
+                },
+            },
+            'prettier-check': {
+                command: function () {
+                    var nodeMajor = parseInt(
+                        process.version.slice(1).split('.')[0],
+                        10
+                    );
+                    if (nodeMajor < 10) {
+                        return "echo 'NOT running prettier on node < v10'";
+                    }
+                    return 'npm run prettier-check';
+                },
+            },
+        },
     });
 
     grunt.loadTasks('tasks');
@@ -227,30 +194,62 @@ module.exports = function (grunt) {
     require('load-grunt-tasks')(grunt);
 
     // Default task.
-    grunt.registerTask('default', ['jshint', 'jscs', 'nodeunit']);
+    grunt.registerTask('default', ['lint', 'test']);
 
-    // test tasks
-    grunt.registerTask('test', ['test:node', 'test:browser']);
-    grunt.registerTask('test:node', ['nodeunit']);
-    grunt.registerTask('test:server', ['concat', 'embedLocales', 'karma:server']);
-    grunt.registerTask('test:browser', ['concat', 'embedLocales', 'karma:chrome', 'karma:firefox']);
-    grunt.registerTask('test:sauce-browser', ['concat', 'embedLocales', 'env:sauceLabs', 'karma:sauce']);
-    grunt.registerTask('test:travis-sauce-browser', ['concat', 'embedLocales', 'karma:sauce']);
-    grunt.registerTask('test:meteor', ['exec:meteor-init', 'exec:meteor-test', 'exec:meteor-cleanup']);
-
-    // travis build task
-    grunt.registerTask('build:travis', [
-        // code style
-        'jshint', 'jscs',
-        // node tests
-        'test:node'
+    // linting
+    grunt.registerTask('lint', [
+        'exec:eslint',
+        'exec:prettier-check',
+        'exec:checkMonthsParseIssue',
     ]);
 
-    grunt.registerTask('meteor-publish', ['exec:meteor-init', 'exec:meteor-publish', 'exec:meteor-cleanup']);
+    // test tasks
+    grunt.registerTask('test', [
+        'test:node',
+        'test:typescript',
+        'test:typescript-3.1',
+    ]);
+    grunt.registerTask('test:node', ['transpile', 'qtest']);
+    grunt.registerTask('test:typescript', ['exec:typescript-test']);
+    grunt.registerTask('test:typescript-3.1', ['exec:ts3.1-typescript-test']);
+    // TODO: For some weird reason karma doesn't like the files in
+    // build/umd/min/* but works with min/*, so update-index, then git checkout
+    grunt.registerTask('test:server', [
+        'transpile',
+        'update-index',
+        'karma:server',
+    ]);
+    grunt.registerTask('test:browser', [
+        'transpile',
+        'update-index',
+        'karma:chrome',
+        'karma:firefox',
+    ]);
+    grunt.registerTask('test:sauce-browser', [
+        'transpile',
+        'update-index',
+        'env:sauceLabs',
+        'karma:sauce',
+    ]);
+    grunt.registerTask('test:meteor', [
+        'exec:meteor-init',
+        'exec:meteor-test',
+        'exec:meteor-cleanup',
+    ]);
+
+    // travis build task
+    grunt.registerTask('build:travis', ['lint', 'exec:coveralls']);
+    grunt.registerTask('meteor-publish', [
+        'exec:meteor-init',
+        'exec:meteor-publish',
+        'exec:meteor-cleanup',
+    ]);
 
     // Task to be run when releasing a new version
     grunt.registerTask('release', [
-        'jshint', 'nodeunit', 'concat', 'embedLocales',
-        'component', 'uglify:main'
+        'default',
+        'update-index',
+        'component',
+        'uglify:main',
     ]);
 };

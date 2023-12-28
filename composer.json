@@ -12,12 +12,12 @@
         "l10n",
         "ender"
     ],
-    "homepage": "http://github.com/moment/moment/",
+    "homepage": "https://github.com/moment/moment",
     "authors": [{"name": "Tim Wood", "email": "washwithcare@gmail.com"}],
     "license": "MIT",
     "type": "component",
     "require": {
-        "robloach/component-installer": "*"
+        "oomphinc/composer-installers-extender": "*"
     },
     "extra": {
         "component": {
